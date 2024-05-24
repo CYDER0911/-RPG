@@ -34,33 +34,21 @@ npcs = [
 ]
 
 # 設置字體
-font_path = "SourceHanSansSC-Regular.otf"  # 字體文件的路徑
-font = pygame.font.Font(font_path, 28)  # 調整字體大小
+font = pygame.font.Font(None, 36)
 
 # 繪製文本函數
-def draw_text(surface, text, position, font, color=(255, 255, 255), max_width=None):
-    words = text.split(' ')
-    space_width, _ = font.size(' ')
-    max_width = max_width or surface.get_width()
-    x, y = position
-    for word in words:
-        word_surface = font.render(word, True, color)
-        word_width, word_height = word_surface.get_size()
-        if x + word_width >= max_width:
-            x = position[0]  # reset the x
-            y += word_height  # start on new row
-        surface.blit(word_surface, (x, y))
-        x += word_width + space_width
-    return y + word_height
+def draw_text(surface, text, position, font, color=(255, 255, 255)):
+    text_surface = font.render(text, True, color)
+    surface.blit(text_surface, position)
 
 # 繪製對話框函數
 def draw_dialog_box(surface, text, font, box_color=(0, 0, 0), text_color=(255, 255, 255)):
     box_width = surface.get_width() - 100
-    box_height = 150  # 增加對話框高度
+    box_height = 100
     box_x = 50
-    box_y = surface.get_height() - box_height - 50
+    box_y = surface.get_height() - 150
     pygame.draw.rect(surface, box_color, (box_x, box_y, box_width, box_height))
-    draw_text(surface, text, (box_x + 10, box_y + 10), font, text_color, max_width=box_x + box_width - 20)
+    draw_text(surface, text, (box_x + 10, box_y + 10), font, text_color)
 
 # 設置遊戲循環
 clock = pygame.time.Clock()
