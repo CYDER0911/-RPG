@@ -2,8 +2,9 @@
 
 import pygame
 import sys
-import pygame
-import sys
+import random
+
+
 
 def npc_dialog(screen, background, npcs, player_order, npc_name, font, draw_dialog_box, clock):
     npc = next((npc for npc in npcs if npc.name == npc_name), None)
@@ -194,6 +195,100 @@ clock = pygame.time.Clock()
 dialog = ""
 current_scene = None  # 当前场景对象
 
+
+# 定义颜色
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# 定义选项
+options = ['石头', '剪刀', '布']
+selected_index = 0
+
+# 加载图像资源
+lord_background = pygame.image.load("領主背景.png")
+lord_background = pygame.transform.scale(lord_background, (800, 600))  # 缩放背景图像以适应窗口尺寸
+lord = pygame.image.load("lord.png")
+lord = pygame.transform.scale(lord, (500, 400)) 
+
+def lord_a():
+    global selected_index
+    clock = pygame.time.Clock()
+    result = None
+    npc_choice = None
+    running = True
+
+    dialog = "領主A台詞\naaaa".split("\n")
+    current_line = 0
+    progress = 0
+    dialog_speed = 1  # 控制文字显示速度，每隔多少帧显示一个字
+    dialog_finished = False  # 用于标记对话是否结束
+    player_choice = None
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if dialog and not dialog_finished:
+                    # 如果有对话在显示，点击屏幕直接显示完整对话或切换到下一句
+                    if progress < len(dialog[current_line]):
+                        progress = len(dialog[current_line])
+                    elif current_line < len(dialog) - 1:
+                        current_line += 1
+                        progress = 0
+                    else:
+                        dialog_finished = True  # 对话结束后设置标志
+                elif result is not None:
+                    return
+            elif dialog_finished and result is None:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        selected_index = (selected_index - 1) % len(options)
+                    elif event.key == pygame.K_DOWN:
+                        selected_index = (selected_index + 1) % len(options)
+                    elif event.key == pygame.K_RETURN:
+                        player_choice = options[selected_index]
+                        npc_choice = random.choice(options)
+                        result = get_result(player_choice, npc_choice)
+
+        screen.blit(lord_background, (0, 0))
+        screen.blit(lord, (150, 100))
+
+        if dialog and not dialog_finished:
+            if progress < len(dialog[current_line]):
+                progress += dialog_speed  # 增加显示的字符数
+            draw_dialog_box(screen, dialog[current_line], font, progress=progress)
+        elif dialog_finished and result is None:
+            # 显示选项
+            for i, option in enumerate(options):
+                color = WHITE
+                if i == selected_index:
+                    color = (255, 0, 0)  # 高亮显示选中的选项
+                draw_text(screen, option, (270, 150 + i * 40), font, color)
+
+        # 显示结果
+        if result:
+            # 将结果显示在对话框中
+            result_text = f"你選擇了: {player_choice}\n領主A選擇了: {npc_choice}\n{result}"
+            draw_dialog_box(screen, result_text, font, len(result_text))
+
+        pygame.display.flip()
+        clock.tick(60)
+
+def get_result(player_choice, npc_choice):
+    if player_choice == npc_choice:
+        return "平局！"
+    elif (player_choice == '石头' and npc_choice == '剪刀') or \
+         (player_choice == '剪刀' and npc_choice == '布') or \
+         (player_choice == '布' and npc_choice == '石头'):
+        return "你赢了！"
+    else:
+        return "你输了！"
+
+lord_a()
+
+
 def main():
     global dialog, current_scene
     player_order = 1
@@ -211,7 +306,7 @@ def main():
         # 绘制游戏场景
         screen.blit(map, (0, 0))
         for location in locations:
-            pygame.draw.rect(screen, (255, 0, 0), location.rect, 2)  # 绘制地点边框
+            pygame.draw.rect(screen, (0, 0, 0), location.rect, 2)  # 绘制地点边框
 
         # 显示对话框
         if dialog:
