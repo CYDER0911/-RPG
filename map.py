@@ -1,9 +1,11 @@
 import pygame
 import sys
 import subprocess
+import random
+
+WHITE =(255,255,255)
 
 completed_paths = ['勇氣']
-
 completed_paths = sys.argv[1:]
 
 # Ensure the current path is marked as completed
@@ -12,6 +14,104 @@ if '勇氣' not in completed_paths:
 
 player_order = 1  # 全局变量
 
+def get_result(player_choice, npc_choice):
+    if player_choice == npc_choice:
+        return "平手！"
+    elif (player_choice == '石頭' and npc_choice == '剪刀') or \
+         (player_choice == '剪刀' and npc_choice == '布') or \
+         (player_choice == '布' and npc_choice == '石頭'):
+        return "你赢了！"
+    else:
+        return "你輸了！"
+
+lord_background = pygame.image.load("領主背景.png")
+lord_background = pygame.transform.scale(lord_background, (800, 600))  # 缩放背景图像以适应窗口尺寸
+lord = pygame.image.load("lord.png")
+lord = pygame.transform.scale(lord, (500, 400)) 
+
+def lord_a():
+    global selected_index
+    clock = pygame.time.Clock()
+    result = None
+    running = True
+    options = ['石頭', '剪刀', '布']
+    npc_choice = random.choice(options)
+    dialog = "我哈特啦\n玩個遊戲吧".split("\n")
+    win_dialog = "\n好啦。這次就放過你吧。".split("\n")
+    lose_dialog = '\n爛咖！這都能輸！\n就罰你按一百遍滑鼠左鍵好了。開始！\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\n23\n24\n25\n26\n27\n28\n29\n30\n31\n32\n33\n34\n35\n36\n37\n38\n39\n40\n41\n42\n43\n44\n45\n46\n47\n48\n49\n50\n51\n52\n53\n54\n55\n56\n57\n58\n59\n60\n61\n62\n63\n64\n65\n66\n67\n68\n69\n70\n71\n72\n73\n74\n75\n76\n77\n78\n79\n80\n81\n82\n83\n84\n85\n86\n87\n88\n89\n90\n91\n92\n93\n94\n95\n96\n97\n98\n99\n100\n好啦，走吧！'.split("\n")
+    post_result_dialog = win_dialog
+    current_line = 0
+    progress = 0
+    dialog_speed = 1  # 控制文字显示速度，每隔多少帧显示一个字
+    dialog_finished = False  # 用于标记对话是否结束
+    post_result_dialog_finished = False  # 用于标记结果后的对话是否结束
+    player_choice = None
+    selected_index = 0
+    current_line = 0
+    running = True
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if dialog and not dialog_finished:
+                    # 如果有对话在显示，点击屏幕直接显示完整对话或切换到下一句
+                    if progress < len(dialog[current_line]):
+                        progress = len(dialog[current_line])
+                    elif current_line < len(dialog) - 1:
+                        current_line += 1
+                        progress = 0
+                    else:
+                        dialog_finished = True  # 对话结束后设置标志
+                elif result is not None and not post_result_dialog_finished:
+                    if progress < len(post_result_dialog[current_line]):
+                        progress = len(post_result_dialog[current_line])
+                    elif current_line < len(post_result_dialog) - 1:
+                        current_line += 1
+                        progress = 0
+                    else:
+                        return
+            elif dialog_finished and result is None:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        selected_index = (selected_index - 1) % len(options)
+                    elif event.key == pygame.K_DOWN:
+                        selected_index = (selected_index + 1) % len(options)
+                    elif event.key == pygame.K_RETURN:
+                        player_choice = options[selected_index]
+                        result = get_result(player_choice, npc_choice)
+                        if get_result(player_choice, npc_choice) == '你輸了！':
+                            post_result_dialog = lose_dialog
+
+        screen.blit(lord_background, (0, 0))
+        screen.blit(lord, (150, 100))
+
+        if dialog and not dialog_finished:
+            if progress < len(dialog[current_line]):
+                progress += dialog_speed  # 增加显示的字符数
+            draw_dialog_box(screen, dialog[current_line], font, progress=progress)
+        elif dialog_finished and result is None:
+            # 显示选项
+            draw_dialog_box(screen, "", font, progress=progress)
+            for i, option in enumerate(options):
+                color = WHITE
+                if i == selected_index:
+                    color = (255, 0, 0)  # 高亮显示选中的选项
+                draw_text(screen, option, (100, 430 + i * 30), font, color)
+        if result is not None and not post_result_dialog_finished:
+            if progress < len(post_result_dialog[current_line]):
+                progress += dialog_speed  # 增加显示的字符数
+            draw_dialog_box(screen, post_result_dialog[current_line], font, progress=progress)
+
+
+
+        pygame.display.flip()
+
+    return
+
+# 运行函数
 def npc_dialog(screen, background, npcs, player_order, npc_name, font, draw_dialog_box, clock):
     npc = next((npc for npc in npcs if npc.name == npc_name), None)
     if npc is None:
@@ -71,14 +171,13 @@ def npc_dialog(screen, background, npcs, player_order, npc_name, font, draw_dial
                     elif current_line < len(dialog) - 1:
                         current_line += 1
                         progress = 0
-                    else:
-                        dialog_finished = True
-                elif dialog_finished:
-                    if player_order == 13:  # 检查是否与第16个NPC交互
+                    elif player_order != 13:  # 检查是否与第16个NPC交互
                                 pygame.quit()
                                 subprocess.Popen(['python', 'GUI2.py'] + completed_paths)  # 运行新脚本
                                 sys.exit()
-                    return player_order + 1
+                    else:
+                        return player_order + 1
+                    
                 else:
                     if can:
                         # 如果有对话在显示，点击屏幕直接显示完整对话或切换到下一句
@@ -118,11 +217,12 @@ def npc_dialog(screen, background, npcs, player_order, npc_name, font, draw_dial
             draw_dialog_box(screen, can[current_line], font, progress=progress)
         elif can_finished and result is None:
             # 显示选项
+            draw_dialog_box(screen, '', font, progress=progress)
             for i, option in enumerate(options):
                 color = WHITE
                 if i == selected_index:
                     color = (255, 0, 0)  # 高亮显示选中的选项
-                draw_text(screen, option, (270, 150 + i * 40), font, color)
+                draw_text(screen, option, (70, 410 + i * 40), font, color)
 
         if result is not None and not dialog_finished:
             if progress < len(dialog[current_line]):
@@ -147,10 +247,11 @@ screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption("RPG Game")
 
 # 加载图像资源
-map = pygame.image.load("map.jpg")
+map = pygame.image.load("勇氣地圖.jpg")
 map = pygame.transform.scale(map, (800, 600))  # 缩放背景图像以适应窗口尺寸
-background = pygame.image.load("人物背景.png")
+background = pygame.image.load("勇氣背景.jpg")
 background = pygame.transform.scale(background, (800, 600))  # 缩放背景图像以适应窗口尺寸
+
 
 # 创建NPC类
 class NPC:
@@ -182,7 +283,7 @@ class NPC:
 npcs = [
     NPC("魔鏡", "魔鏡.png", 150, 150, 500, 300, 1, ['啊!是鏡子!', '我不擅長跟爸媽相處...', '誰是世界上最好看的人?'],'我不擅長跟爸媽相處...', '你有什麼問題想要問我？', "都幾歲了，還不懂得怎麼跟父母相處？\n好吧，既然你們都低聲下氣的問我了，告訴你們也無妨。\n要成為有勇氣能夠和父母表達真正的想法並理性溝通的人，\n要先向一個<em>五歲的男童</em>請教反抗父母的辦法，去吧！"),
     NPC("小新", "小新.jpg", 300, 200, 200, 220, 2,['要怎麼反抗父母呢?', '我想追漂亮姐姐！', '小孩，去寫作業。'],'要怎麼反抗父母呢?',  '嘿嘿～大姐姐，妳是來看我的嗎？', "反抗父母？！\n我忍受我爸爸的腳臭味很久了！\n我本來都不敢和他正面對決\n但是！自從我學會了【必殺技】之後，\n我終於成功反抗父母了！\n所以，要反抗父母必須要學會一個必殺技\n<em></em>我有一個圓圓胖胖的熊貓好朋友，身懷絕技，\n<em></em>可以向他請教要怎麼培養出最厲害的必殺技！"),
-    NPC("功夫熊貓", "功夫熊貓.png", 280, 200, 250, 375, 3,['你的黑眼圈也太重了吧', '熊貓跟貓熊何者正確?', '可以教我必殺技嗎?'],'可以教我必殺技嗎?', "我是神龍大俠！ㄏㄧ ㄏㄚˋ","你們這些小毛頭也想來找我學必殺技？\n你們連最基本的功伕都沒有\n但看在你們誠懇的份上\n<em></em>你們就先去找我的國際美人朋友\n<em></em>讓他教導你們基本功吧！"),
+    NPC("功夫熊貓", "功夫熊貓.png", 280, 90, 250, 375, 3,['你的黑眼圈也太重了吧', '熊貓跟貓熊何者正確?', '可以教我必殺技嗎?'],'可以教我必殺技嗎?', "我是神龍大俠！ㄏㄧ ㄏㄚˋ","你們這些小毛頭也想來找我學必殺技？\n你們連最基本的功伕都沒有\n但看在你們誠懇的份上\n<em></em>你們就先去找我的國際美人朋友\n<em></em>讓他教導你們基本功吧！"),
     NPC("鍾明軒", "鍾明軒.png", 100, 100, 600, 375, 4,['可以唱煎熬給我聽嗎?', '熊貓說你會基本功！', '你好漂亮喔~'],'熊貓說你會基本功！',  "哈囉我是國際美人鍾明軒！", "哎呀～沒想到那熊貓把你們引薦給我\n看來是有點資質呢\n我就來教你們基本功吧！\n這招叫「氣」！\n顧名思義就是要學著控制你們的氣息\n才能好好集氣\n我們開始練功吧！\
         \n(一陣練功後)....\n很好，你們現在已經學會「氣」了!\n去把你們學會的功夫展現給那位穿著水手服的美少女吧！\n相信她能夠帶領你們完成必殺技"),
     NPC("美少女戰士", "美少女戰士.png", 150, 30, 500, 600, 5,['(展示基本功)', '我也來自月球!', '代替月亮懲罰你!'],'(展示基本功)',  "我要代替月亮來懲罰你們！", "看來想學必殺技的人就是你了(❀╹◡╹)\n我當然願意傳授我的獨門必殺技給你(❀╹◡╹)\n但最近月球上出了大事இдஇ\n我必須回去月球解決！\n<em></em>可不可以請你去找藍色狸貓呢?\n他的百寶袋裡會有回到月球的交通工具\n至於必殺技，相信在你們探險的歷程中會自己領悟的!"),
@@ -211,22 +312,22 @@ class Location:
 
 # 创建多个地点
 locations = [
-    Location("小新", (60, 55, 25, 40), "嘿嘿～大姐姐，妳是來看我的嗎？"),
-    Location("杜芬舒斯", (283, 17, 25, 40), "我恨你！鴨嘴獸泰瑞！"),
-    Location("香吉士", (343, 70, 25, 40), "美麗的女孩，想看看我的惡魔風腳嗎？"),
-    Location("多拉A夢", (375, 120, 25, 40), "大雄～你又怎麼了？"),
-    Location("海斗", (515, 130, 25, 40), "不能撫去女人眼淚的男人，根本不配做男人"),
-    Location("鴨嘴獸泰瑞", (475, 170, 25, 40), "什麼！？杜芬舒斯又有新的邪惡計畫了？"),
-    Location("細菌人", (715, 160, 25, 40), "可愛又迷人的反派角色-細菌人！"),
-    Location("功夫熊貓", (590, 225, 25, 40), "我是神龍大俠！ㄏㄧ ㄏㄚ！"),
-    Location("美少女戰士", (570, 275, 25, 40), "我要代替月亮來懲罰你們！"),
-    Location("艾莎", (195, 250, 25, 40), "全部都給我 let it go！"),
-    Location("鄧不利多", (195, 350, 25, 40), "吼吼吼，welcome to the magic world！"),
-    Location("蜘蛛人", (285, 380, 25, 40), "The greater the ability, the greater the responsibility."),
-    Location("花媽", (400, 285, 25, 40), "Do Re Mi So！"),
-    Location("兩津勘吉", (720, 305, 25, 40), "閃啦！閃啦！撞到不負責喔！"),
-    Location("魔鏡", (485, 455, 25, 40), "你想知道誰是世界上最漂亮的女人嗎？"),
-    Location("鍾明軒", (620, 510, 25, 40), "哈囉！我是國際美人鍾明軒~"),
+    Location("小新", (360, 330, 60, 70), "嘿嘿～大姐姐，妳是來看我的嗎？"),
+    Location("杜芬舒斯", (520, 370, 80, 75), "我恨你！鴨嘴獸泰瑞！"),
+    Location("香吉士", (550, 245, 90, 75), "美麗的女孩，想看看我的惡魔風腳嗎？"),
+    Location("多拉A夢", (515, 500, 78, 83), "大雄～你又怎麼了？"),
+    Location("海斗", (630, 410, 146, 98), "不能撫去女人眼淚的男人，根本不配做男人"),
+    Location("鴨嘴獸泰瑞", (165, 390, 72, 75), "什麼！？杜芬舒斯又有新的邪惡計畫了？"),
+    Location("細菌人", (455, 40, 55, 75), "可愛又迷人的反派角色-細菌人！"),
+    Location("功夫熊貓", (100, 260, 60, 90), "我是神龍大俠！ㄏㄧ ㄏㄚ！"),
+    Location("美少女戰士", (95, 80, 140, 85), "我要代替月亮來懲罰你們！"),
+    Location("艾莎", (390, 220, 70, 90), "全部都給我 let it go！"),
+    Location("鄧不利多", (650, 100, 80, 90), "吼吼吼，welcome to the magic world！"),
+    Location("蜘蛛人", (245, 190, 70, 75), "The greater the ability, the greater the responsibility."),
+    Location("花媽", (347, 120, 53, 75), "Do Re Mi So！"),
+    Location("兩津勘吉", (337, 510, 73, 85), "閃啦！閃啦！撞到不負責喔！"),
+    Location("魔鏡", (260, 420, 50, 68), "你想知道誰是世界上最漂亮的女人嗎？"),
+    Location("鍾明軒", (30, 480, 140, 90), "哈囉！我是國際美人鍾明軒~"),
 ]
 
 # 设置字体
@@ -269,10 +370,20 @@ clock = pygame.time.Clock()
 dialog = ""
 current_scene = None  # 当前场景对象
 
+def draw_transparent_rect(screen, rect, color, alpha):
+    # Create a surface with per-pixel alpha
+    transparent_surface = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+    # Fill the surface with the color and set its alpha
+    transparent_surface.fill((*color, alpha))
+    # Blit the transparent surface onto the main screen at the rect's position
+    screen.blit(transparent_surface, rect.topleft)
+
 def main():
     global dialog, current_scene
     player_order = 1
+    lord_a_finish = False
     while True:
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -281,13 +392,16 @@ def main():
                 mouse_pos = pygame.mouse.get_pos()
                 for location in locations:
                     if location.rect.collidepoint(mouse_pos):
+                        if player_order == 5 and lord_a_finish == False:
+                            lord_a()
+                            lord_a_finish = True
                         player_order = npc_dialog(screen, background, npcs, player_order, location.name, font, draw_dialog_box, clock)
 
         # 绘制游戏场景
         screen.blit(map, (0, 0))
         for location in locations:
-            pygame.draw.rect(screen, (255, 0, 0), location.rect, 2)  # 绘制地点边框
-
+            draw_transparent_rect(screen, location.rect, (255, 255, 255), 0)  # Draw transparent rectangle
+         
         # 显示对话框
         if dialog:
             draw_dialog_box(screen, dialog, font)
