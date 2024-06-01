@@ -77,9 +77,9 @@ def button_event():
 
 def display_clue(path):
     clues = {
-        '勇氣': 'You need to find the wise old man in the forest.',
-        '愛情': 'Seek the maiden in the town square.',
-        '友情': 'Look for the blacksmith in the village.'
+        '勇氣': '你哭他也哭，你笑他也笑，正面看的見，背面看不到',
+        '愛情': '聽說這個平行宇宙中有一個上知天文下知地理的天才',
+        '友情': '國際美人'
     }
     clue_text = clues.get(path, 'Unknown path')
 
@@ -97,11 +97,14 @@ def display_clue(path):
 def open_python_file(path):
     file_names = {
         '勇氣': 'map.py',
-        '愛情': 'path2.py',
-        '友情': 'path3.py'
+        '愛情': 'map2.py',
+        '友情': 'map3.py'
     }
     file_name = file_names.get(path, 'path3.py')
     subprocess.Popen(['python', file_name])
+    window.iconify()
+    
+    
 
 # Create the main window
 window = tk.Tk()
