@@ -86,7 +86,7 @@ def show_remaining_paths(completed_paths):
         path_button = tk.Button(button_frame, text=remaining_paths[0], command=lambda: display_clue(remaining_paths[0]), width=15, height=2)
         path_button.grid(row=0, column=1, padx=10)
         text_widget.delete('1.0', tk.END)
-        text_widget.insert(tk.END, f"You have completed: {', '.join(completed_paths)}\nOnly one path remains:", 'normal')
+        text_widget.insert(tk.END, f"你已完成: {', '.join(completed_paths)}\n只剩一個摁題需要處理了，加油！", 'normal')
     elif len(remaining_paths) == 0:
         dialogue = '我是冠軍 我有金腰帶'
         type_text(text_widget, dialogue)
@@ -95,7 +95,7 @@ def show_remaining_paths(completed_paths):
             path_button = tk.Button(button_frame, text=path, command=lambda p=path: display_clue(p), width=15, height=2)
             path_button.grid(row=0, column=idx, padx=10)
         text_widget.delete('1.0', tk.END)
-        text_widget.insert(tk.END, f"You have completed: {', '.join(completed_paths)}\nChoose another path:", 'normal')
+        text_widget.insert(tk.END, f"你已完成： {', '.join(completed_paths)}\n去解決其他問題吧！", 'normal')
 
 def button_event():
     mybutton.grid_forget()
